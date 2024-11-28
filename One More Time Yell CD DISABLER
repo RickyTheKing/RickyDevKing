@@ -1,0 +1,132 @@
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+local damageEvent = ReplicatedStorage:WaitForChild("Damage24")
+local knockEvent = ReplicatedStorage:WaitForChild("Knock")
+local yellEvent = ReplicatedStorage:WaitForChild("Yell")
+
+local function playYellAnimation(player)
+    local character = player.Character
+    if not character then return end
+
+    local stand = character:FindFirstChild("Stand")
+    if stand then
+        local animation = stand:FindFirstChild("Yell")
+        if animation then
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                local animTrack = humanoid:LoadAnimation(animation)
+                animTrack:Play()
+            end
+        end
+    end
+
+    local vest = character:FindFirstChild("Stand"):FindFirstChild("Vest")
+    if vest then
+        local dieSound = vest:FindFirstChild("Die")
+        if dieSound then
+            dieSound:Play()
+        end
+    end
+end
+
+function hito3(partoz, partcfr, magn, dmg, debtim, debtime, bodyfdire, effect, grow, color, sound, pitch, volume)
+    local chr = partoz.Parent
+    local noDamage = chr:FindFirstChild("NoDamage")
+    if noDamage and noDamage.Value == true then
+        return
+    end
+
+    local playersInRange = {}
+    for _, guy in pairs(workspace:GetChildren()) do
+        if guy:FindFirstChild("Humanoid") and guy:FindFirstChild("HumanoidRootPart") then
+            if guy ~= chr then
+                local humanoidRootPart = guy:FindFirstChild("HumanoidRootPart")
+                local distance = (humanoidRootPart.Position - partoz.Position).Magnitude
+                if distance <= magn and guy:FindFirstChild("HumanoidRootPart"):FindFirstChild("alabo") == nil then
+                    table.insert(playersInRange, guy)
+                end
+            end
+        end
+    end
+
+    for _, guy in pairs(playersInRange) do
+        local humz = guy:FindFirstChild("Humanoid")
+        local horp = guy:FindFirstChild("HumanoidRootPart")
+        if humz and horp then
+            damageEvent:FireServer(humz, partcfr, dmg, debtime, bodyfdire, effect, grow, color, sound, pitch, volume)
+            knockEvent:FireServer(humz)
+
+            local db = Instance.new("StringValue")
+            db.Name = "alabo"
+            db.Parent = horp
+            delay(debtim, function()
+                db:Destroy()
+            end)
+        end
+    end
+end
+
+local function onKeyPress(input, gameProcessedEvent)
+    if gameProcessedEvent then return end
+    if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.T then
+        local player = game.Players.LocalPlayer
+        local character = player.Character
+        if not character then return end
+
+        local disabled = character:FindFirstChild("Disabled")
+        if disabled and disabled.Value == true then
+            return
+        end
+
+        local vest = character:FindFirstChild("Stand"):FindFirstChild("Vest")
+        local yell = character:FindFirstChild("Stand"):FindFirstChild("Yell")
+        
+        if not vest or not yell then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Error",
+                Text = "You need One More Time",
+                Duration = 5
+            })
+            return
+        end
+
+        local noDamage = character:FindFirstChild("NoDamage")
+        if not noDamage then
+            noDamage = Instance.new("BoolValue")
+            noDamage.Name = "NoDamage"
+            noDamage.Parent = character
+        end
+        noDamage.Value = true
+
+        noDamage.Value = false
+
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            playYellAnimation(player)
+            yellEvent:FireServer(player)
+            local partcfr = hrp.CFrame * CFrame.new(0, -1, 0) * CFrame.new(math.random(-0.25, 0.25), math.random(-0.25, 0.25), math.random(-0.25, 0.25))
+            local magn = 20
+            local dmg = 30
+            local debtim = 0.75
+            local debtime = 0.25
+            local bodyfdire = hrp.CFrame.lookVector * 30
+            local effect = "rbxassetid://241837157"
+            local grow = 0.075
+            local color = Color3.new(255, 255, 255)
+            local sound = "rbxassetid://260430079"
+            local pitch = math.random(9, 11) / 10
+            local volume = math.random(9, 11) / 10
+            hito3(hrp, partcfr, magn, dmg, debtim, debtime, bodyfdire, effect, grow, color, sound, pitch, volume)
+
+            local humanoid = character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = 16
+                humanoid.JumpPower = 50
+            end
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(onKeyPress)
