@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local damageEvent = ReplicatedStorage:WaitForChild("Damage24")
-local knockEvent = ReplicatedStorage:WaitForChild("Knock")
+local knockEvent = ReplicatedStorage:WaitForChild("Knock") 
 local yellEvent = ReplicatedStorage:WaitForChild("Yell")
 
 local function playYellAnimation(player)
